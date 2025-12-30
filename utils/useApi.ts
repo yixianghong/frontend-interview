@@ -1,7 +1,7 @@
 import example from '@/apis/examples'
-import verifyOtpSimple from '@/apis/verify-otp-simple'
+import verifyOtp from '@/apis/verify-otp'
 
 export default () => ({
   example,
-  verifyOtpSimple
+  verifyOtp
 })

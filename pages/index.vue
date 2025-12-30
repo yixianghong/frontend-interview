@@ -11,15 +11,6 @@ type VerifyStatus =
 const verifyStatus = ref<VerifyStatus>({ status: 'idle', message: '' })
 
 /**
- * 處理 OTP 驗證完成事件
- * @param otp OTP 代碼
- * 呼叫驗證 API
- */
-const handleComplete = (otp: string) => {
-  verifyOtpApi(otp)
-}
-
-/**
  * 處理 OTP 變化事件
  * 重置狀態
  */
@@ -44,6 +35,14 @@ const OTP_MESSAGES = {
   ERROR: '驗證失敗，請稍後再試'
 } as const
 
+const otpCode = ref<string>('')
+
+/**
+ * OTP 驗證碼長度
+ * 可設定為 6、7 或 8 碼
+ */
+const OTP_LENGTH = 6
+
 /**
  * 驗證 OTP
  * @param otp OTP 代碼
@@ -53,7 +52,7 @@ const OTP_MESSAGES = {
 const verifyOtpApi = async (otp: string) => {
   try {
     verifyStatus.value = { status: 'verifying', message: OTP_MESSAGES.VERIFYING }
-    const response = await useApi().verifyOtpSimple.verify({ otp })
+    const response = await useApi().verifyOtp.verify({ otp })
     if (response.success && response.data.verified) {
       verifyStatus.value = { status: 'success', message: OTP_MESSAGES.SUCCESS }
     } else {
@@ -63,18 +62,29 @@ const verifyOtpApi = async (otp: string) => {
     verifyStatus.value = { status: 'error', message: OTP_MESSAGES.ERROR }
   }
 }
+
+/**
+ * 監聽 OTP 代碼變化
+ * 當輸入完成（達到指定長度）時自動觸發驗證
+ */
+watch(otpCode, (newValue) => {
+  if (newValue.length === OTP_LENGTH) {
+    verifyOtpApi(newValue)
+  }
+})
 </script>
 
 <template>
   <div>
     <InputOtp
-      :length="6"
+      v-model="otpCode"
+      :length="OTP_LENGTH"
       :disabled="verifyStatus.status === 'verifying'"
       :is-success="verifyStatus.status === 'success'"
       :success-message="verifyStatus.message"
       :is-error="verifyStatus.status === 'error'"
       :error-message="verifyStatus.message"
-      @complete="handleComplete"
+      :layout="'two-columns'"
       @change="handleChange"
     />
   </div>

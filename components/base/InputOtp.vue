@@ -1,23 +1,30 @@
 <script setup lang="ts">
 interface Props {
+  modelValue?: string
   length: number
   disabled: boolean
   isSuccess: boolean
   successMessage: string
   isError: boolean
   errorMessage: string
+  layout?: 'single' | 'two-columns' | 'two-rows'
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  modelValue: '',
   length: 6,
   disabled: false,
   isSuccess: false,
   successMessage: '',
   isError: false,
-  errorMessage: ''
+  errorMessage: '',
+  layout: 'single'
 })
 
-const emit = defineEmits<{(e: 'complete', otp: string): void, (e: 'change', otp: string): void}>()
+const emit = defineEmits<{
+  'update:modelValue': [value: string]
+  'change': [otp: string]
+}>()
 
 const otpCode = ref<string[]>([])
 const MIN_LENGTH = 4
@@ -25,27 +32,65 @@ const MAX_LENGTH = 8
 
 /**
  * 監聽 OTP 代碼變化
- * 如果 OTP 代碼長度等於指定長度，則觸發 complete 事件
+ * 觸發 update:modelValue 和 change 事件
  */
 watch(otpCode, (newValues) => {
   const otp = newValues.join('')
+  emit('update:modelValue', otp)
   emit('change', otp)
-  if (otp.length === props.length) {
-    emit('complete', otp)
-  }
 }, { deep: true })
+
+/**
+ * 監聽外部 modelValue 變化
+ * 同步到內部 otpCode
+ */
+watch(() => props.modelValue, (newValue) => {
+  if (newValue !== undefined) {
+    const chars = newValue.split('').slice(0, props.length)
+    otpCode.value = [...chars, ...Array(props.length - chars.length).fill('')]
+  }
+})
 
 /**
  * 初始化 OTP 代碼
  * 將 OTP 代碼初始化為指定長度的空陣列
  */
 const initializeOtpCode = () => {
+  console.log('initializeOtpCode', props.length, MIN_LENGTH)
   if (props.length < MIN_LENGTH || props.length > MAX_LENGTH) {
     throw new Error('長度不在指定範圍內')
   }
   otpCode.value = Array(props.length).fill('')
   focusInputElement(0)
 }
+
+/**
+ * 根據 layout 模式計算容器的 CSS class
+ */
+const containerClass = computed(() => {
+  switch (props.layout) {
+    case 'single':
+      return 'flex gap-2'
+    case 'two-columns':
+      return 'grid grid-cols-2 gap-2'
+    case 'two-rows':
+      return 'grid gap-2'
+    default:
+      return 'flex gap-2'
+  }
+})
+
+/**
+ * 計算 2列式的 grid-template-columns
+ * 根據 length 動態生成欄數
+ */
+const gridTemplateColumns = computed(() => {
+  if (props.layout === 'two-rows') {
+    const cols = Math.ceil(props.length / 2)
+    return `repeat(${cols}, minmax(0, 1fr))`
+  }
+  return undefined
+})
 
 /**
  * 處理輸入事件
@@ -118,7 +163,10 @@ onMounted(() => {
 </script>
 <template>
   <div>
-    <div class="flex gap-2">
+    <div
+      :class="containerClass"
+      :style="props.layout === 'two-rows' ? { gridTemplateColumns } : undefined"
+    >
       <input
         v-for="(code, otpIndex) in otpCode.length"
         :id="`otp-${otpIndex}`"

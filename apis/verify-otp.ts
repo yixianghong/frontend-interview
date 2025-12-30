@@ -10,7 +10,7 @@ type Response = {
   }
 }
 
-const verify = (payload: Payload) => useHttp().post('/examples/verify-otp-simple', {
+const verify = (payload: Payload) => useHttp().post('/examples/verify-otp', {
   body: {
     ...payload
   }
