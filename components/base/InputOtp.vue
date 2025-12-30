@@ -72,9 +72,9 @@ const containerClass = computed(() => {
     case 'single':
       return 'flex gap-2'
     case 'two-columns':
-      return 'grid grid-cols-2 gap-2'
+      return 'grid grid-cols-2 gap-2 w-fit'
     case 'two-rows':
-      return 'grid gap-2'
+      return 'grid gap-2 w-fit'
     default:
       return 'flex gap-2'
   }

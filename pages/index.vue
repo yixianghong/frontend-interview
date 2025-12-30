@@ -84,7 +84,7 @@ watch(otpCode, (newValue) => {
       :success-message="verifyStatus.message"
       :is-error="verifyStatus.status === 'error'"
       :error-message="verifyStatus.message"
-      :layout="'two-columns'"
+      :layout="'single'"
       @change="handleChange"
     />
   </div>
